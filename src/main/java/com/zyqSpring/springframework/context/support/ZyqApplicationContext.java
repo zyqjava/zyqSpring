@@ -3,8 +3,10 @@ package com.zyqSpring.springframework.context.support;
 import com.zyqSpring.springframework.annotation.ZyqAutowired;
 import com.zyqSpring.springframework.beans.ZyqBeanWrapper;
 import com.zyqSpring.springframework.beans.config.ZyqBeanDefinition;
+import com.zyqSpring.springframework.beans.config.ZyqBeanPostProcessor;
 import com.zyqSpring.springframework.beans.support.ZyqBeanDefinitionReader;
 import com.zyqSpring.springframework.context.ApplicationContext;
+import com.zyqSpring.springframework.core.factory.ZyqDefaultListableBeanFactory;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -15,21 +17,20 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by Enzo Cotter on 2021/5/21.
  */
-public class ZyqApplicationContext implements ApplicationContext {
+public class ZyqApplicationContext extends ZyqDefaultListableBeanFactory implements ApplicationContext {
 
     //配置文件的路径
-    private String configLocation;
-
+    private String[] configLocations;
     private ZyqBeanDefinitionReader reader;
 
-    //保存factoryBean和BeanDefinition的对应关系
-    private final Map<String, ZyqBeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>();
 
     /**保存了真正实例化的对象*/
     private Map<String, ZyqBeanWrapper> factoryBeanInstanceCache = new ConcurrentHashMap<>();
+    //单例的IOC容器缓存
+    private Map<String, Object> factoryBeanObjectCache = new ConcurrentHashMap<>();
 
-    public ZyqApplicationContext(String configLocation) {
-        this.configLocation = configLocation;
+    public ZyqApplicationContext(String... configLocations) {
+        this.configLocations = configLocations;
         try {
             refresh();
         } catch (Exception e) {
@@ -38,9 +39,9 @@ public class ZyqApplicationContext implements ApplicationContext {
     }
 
 
-    private void refresh() throws Exception {
+    public void refresh() throws Exception {
         //step1:定位，定位配置文件
-        reader = new ZyqBeanDefinitionReader(this.configLocation);
+        reader = new ZyqBeanDefinitionReader(this.configLocations);
         //step2:加载配置文件，扫描相关的类，把他们封装成BeanDefinition
         List<ZyqBeanDefinition> beanDefinitions = reader.loadBeanDefinitions();
         //step3:注册，把配置信息放到容器里面（ioc容器）
@@ -80,6 +81,10 @@ public class ZyqApplicationContext implements ApplicationContext {
      * 将封装好的BeanWrapper保存到IOC容器（实际就是一个Map）中
      * 依赖注入实例化的Bean
      * 返回最终实例
+     *
+     * //装饰器模式：
+     *     //1、保留原来的OOP关系
+     *     //2、我需要对它进行扩展，增强（为了以后AOP打基础）
      * @param beanName
      * @return
      * @throws Exception
@@ -95,6 +100,9 @@ public class ZyqApplicationContext implements ApplicationContext {
 
         ZyqBeanDefinition zyqBeanDefinition = this.beanDefinitionMap.get(beanName);
 
+        ZyqBeanPostProcessor postProcessor = new ZyqBeanPostProcessor();
+        postProcessor.postProcessBeforeInitialization(instance, beanName);
+
         //1.调用反射初始化bean
         instance = instantiateBean(beanName, zyqBeanDefinition);
 
@@ -107,6 +115,7 @@ public class ZyqApplicationContext implements ApplicationContext {
         //注册一个全类名（com.zyqSpring.helloService）
         this.factoryBeanInstanceCache.put(zyqBeanDefinition.getBeanClassName(), zyqBeanWrapper);
 
+        postProcessor.postProcessAfterInitialization(instance, beanName);
         //4.注入
         populateBean(beanName, new ZyqBeanDefinition(), zyqBeanWrapper);
 
@@ -152,7 +161,7 @@ public class ZyqApplicationContext implements ApplicationContext {
                 //将容器中的实例注入到成员变量中
                 field.set(zyqBeanWrapper.getWrappedInstance(), this.factoryBeanInstanceCache.get(autowiredBeanName).getWrappedInstance());
             } catch (Exception e) {
-
+                System.out.println("注入失败, 失败的bean" + beanName);
             }
         }
     }
