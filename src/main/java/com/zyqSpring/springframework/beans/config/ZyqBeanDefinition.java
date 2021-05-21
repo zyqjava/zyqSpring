@@ -8,6 +8,7 @@ import lombok.Setter;
  * 也就是Bean的配置信息，
  * 包括className、是否为单例、是否需要懒加载等等。它是一个interface，
  * 这里我们直接定义成class。
+ *
  */
 @Getter
 @Setter
@@ -15,5 +16,5 @@ public class ZyqBeanDefinition {
     private String beanClassName;
     private boolean lazyInit = false;
     private String factoryBeanName;
-    public ZyqBeanDefinition() {};
+    public ZyqBeanDefinition() {}
 }
