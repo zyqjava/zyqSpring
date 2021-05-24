@@ -104,7 +104,7 @@ public class ZyqBeanDefinitionReader {
                         Class<?>[] interfaces = beanClass.getInterfaces();
                         for (Class<?> anInterface : interfaces) {
                             //接口和实现类之间的关系也需要封装
-                            beanDefinitionList.add(doCreateZyqBeanDefinition(beanClass.getName(), anInterface.getName()));
+                            beanDefinitionList.add(doCreateZyqBeanDefinition(beanClass.getName(), toLowerFirstCase(anInterface.getSimpleName())));
                         }
                         break;
                     }
