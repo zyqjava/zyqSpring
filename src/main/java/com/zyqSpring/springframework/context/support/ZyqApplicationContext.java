@@ -1,6 +1,11 @@
 package com.zyqSpring.springframework.context.support;
 
 import com.zyqSpring.springframework.annotation.ZyqAutowired;
+import com.zyqSpring.springframework.aop.AopProxy;
+import com.zyqSpring.springframework.aop.CglibAopProxy;
+import com.zyqSpring.springframework.aop.JdkDynamicAopProxy;
+import com.zyqSpring.springframework.aop.config.AopConfig;
+import com.zyqSpring.springframework.aop.support.AdvisedSupport;
 import com.zyqSpring.springframework.beans.ZyqBeanWrapper;
 import com.zyqSpring.springframework.beans.config.ZyqBeanDefinition;
 import com.zyqSpring.springframework.beans.config.ZyqBeanPostProcessor;
@@ -175,10 +180,31 @@ public class ZyqApplicationContext extends ZyqDefaultListableBeanFactory impleme
         try {
             Class<?> clazz = Class.forName(beanClassName);
             instance = clazz.newInstance();
+
+            //############填充如下代码###############
+            //获取AOP配置
+            AdvisedSupport aopConfig = getAopConfig();
+            aopConfig.setTargetClass(clazz);
+            aopConfig.setTarget(instance);
+            //符合PointCut的规则的话，将创建代理对象
+            if(aopConfig.pointCutMatch()) {
+                //创建代理
+                instance = createProxy(aopConfig).getProxy();
+            }
+            //#############填充完毕##############
         } catch (Exception e) {
             System.out.println("实例化对象失败 类名--" + beanClassName);
         }
         return instance;
+    }
+
+    private AopProxy createProxy(AdvisedSupport aopConfig) {
+        Class<?> targetClass = aopConfig.getTargetClass();
+        //如果是接口，默认使用JDK
+        if (targetClass.getInterfaces().length > 0) {
+            return new JdkDynamicAopProxy(aopConfig);
+        }
+        return new CglibAopProxy(aopConfig);
     }
 
     private Object getSingleton(String beanName) {
@@ -190,5 +216,16 @@ public class ZyqApplicationContext extends ZyqDefaultListableBeanFactory impleme
     @Override
     public <T> T getBean(Class<T> requiredType) throws Exception {
         return (T) getBean(requiredType.getName());
+    }
+
+    private AdvisedSupport getAopConfig() {
+        AopConfig config = new AopConfig();
+        config.setPointCut(this.reader.getConfig().getProperty("pointCut"));
+        config.setAspectClass(this.reader.getConfig().getProperty("aspectClass"));
+        config.setAspectBefore(this.reader.getConfig().getProperty("aspectBefore"));
+        config.setAspectAfter(this.reader.getConfig().getProperty("aspectAfter"));
+        config.setAspectAfterThrow(this.reader.getConfig().getProperty("aspectAfterThrow"));
+        config.setAspectAfterThrowingName(this.reader.getConfig().getProperty("aspectAfterThrowingName"));
+        return new AdvisedSupport(config);
     }
 }
