@@ -1,10 +1,10 @@
 package com.zyqSpring.springframework.beans.support;
 
+import com.zyqSpring.boot.annotation.ZyqComponentScan;
 import com.zyqSpring.springframework.annotation.ZyqComponent;
 import com.zyqSpring.springframework.beans.config.ZyqBeanDefinition;
 
 import java.io.File;
-import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.net.URL;
 import java.util.ArrayList;
@@ -12,16 +12,12 @@ import java.util.List;
 import java.util.Properties;
 
 /**
- * 我们需要读取配置文件，扫描相关的类才能解析成BeanDefinition，
- * 这个读取 + 扫描的类就是BeanDefinitionReader
+ * Created by Enzo Cotter on 2021/5/27.
  */
-public class ZyqBeanDefinitionReader {
+public class ZyqAnnotationBeanDedinitionReader {
 
     //配置文件
     private Properties config = new Properties();
-
-    //配置文件中指定需要扫描的包名
-    private final String SCAN_PACKAGE = "scanPackage";
 
     /**保存了所有Bean的className*/
     private List<String> registerBeanClasses = new ArrayList<>();
@@ -31,19 +27,27 @@ public class ZyqBeanDefinitionReader {
      * 将我们传入的配置文件路径解析为文件流
      * 将文件流保存为Properties，方便我们通过Key-Value的形式来读取配置文件信息
      * 根据配置文件中配置好的扫描路径，开始扫描该路径下的所有class文件并保存到集合中
-     * @param locations
+     * @param annotatedClasses
      */
-    public ZyqBeanDefinitionReader(String... locations) {
-        try ( //定位，通过url定位找到配置文件，然后转换成文件流
-              // Spring中使用策略模式读取，这里直接将classpath: 替换成空
-              InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(locations[0].replace("classpath:", ""))) {
-        //加载，保存为properties
-            config.load(inputStream);
+    public ZyqAnnotationBeanDedinitionReader(Class<?>... annotatedClasses) {
+        try {
+            for (Class<?> annotatedClass : annotatedClasses) {
+                //扫描,扫描资源文件.class，并保存到集合中
+                if (!annotatedClass.isAnnotationPresent(ZyqComponentScan.class)) {
+                    continue;
+                }
+                ZyqComponentScan annotation = annotatedClass.getAnnotation(ZyqComponentScan.class);
+                String[] packages = annotation.value();
+                if (packages.length > 0) {
+                    for (String basePackage : packages) {
+                        doScanner(basePackage);
+                    }
+                }
+            }
         } catch (Exception e) {
             System.out.println("读取文件失败" + e.getMessage());
         }
-        //扫描,扫描资源文件.class，并保存到集合中
-        doScanner(config.getProperty(SCAN_PACKAGE));
+
     }
 
     /**

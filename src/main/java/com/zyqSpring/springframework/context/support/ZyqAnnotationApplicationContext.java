@@ -16,38 +16,64 @@ import com.zyqSpring.springframework.core.factory.ZyqDefaultListableBeanFactory;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 /**
- * Created by Enzo Cotter on 2021/5/21.
+ * Created by Enzo Cotter on 2021/5/27.
  */
-public class ZyqApplicationContext extends ZyqDefaultListableBeanFactory implements ApplicationContext {
+public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFactory implements ApplicationContext {
 
     //配置文件的路径
-    private String[] configLocations;
     private ZyqBeanDefinitionReader reader;
-
 
     /**保存了真正实例化的对象*/
     private Map<String, ZyqBeanWrapper> factoryBeanInstanceCache = new ConcurrentHashMap<>();
     //单例的IOC容器缓存
     private Map<String, Object> factoryBeanObjectCache = new ConcurrentHashMap<>();
 
-    public ZyqApplicationContext(String... configLocations) {
-        this.configLocations = configLocations;
+    public ZyqAnnotationApplicationContext() {
+        //step1:定位，定位配置文件
+        reader = new ZyqBeanDefinitionReader();
+    }
+
+    public ZyqAnnotationApplicationContext(Class<?>... annotatedClasses) {
+        this();
         try {
+            //注册配置类
+            register(annotatedClasses);
+            //注入IOC容器
             refresh();
         } catch (Exception e) {
-            System.out.println("XML方式启动容器失败");
+            System.out.println("容器启动失败");
         }
+    }
+
+    public ZyqAnnotationApplicationContext(String... basePackages) {
+        this();
+        try {
+            scan(basePackages);
+            refresh();
+        } catch (Exception e) {
+            System.out.println("容器启动失败");
+        }
+    }
+
+    private void scan(String[] basePackages) {
+        //step1:定位，定位配置文件
+        ZyqBeanDefinitionReader reader = new ZyqBeanDefinitionReader();
+        if (basePackages.length > 0) {
+            for (String basePackage : basePackages) {
+                reader.doScanner(basePackage);
+            }
+        }
+    }
+
+    private void register(Class<?>[] annotatedClasses) {
+
     }
 
 
     public void refresh() throws Exception {
-        //step1:定位，定位配置文件
-        reader = new ZyqBeanDefinitionReader(this.configLocations);
         //step2:加载配置文件，扫描相关的类，把他们封装成BeanDefinition
         List<ZyqBeanDefinition> beanDefinitions = reader.loadBeanDefinitions();
         //step3:注册，把配置信息放到容器里面（ioc容器）
@@ -222,20 +248,6 @@ public class ZyqApplicationContext extends ZyqDefaultListableBeanFactory impleme
     @Override
     public <T> T getBean(Class<T> requiredType) throws Exception {
         return (T) getBean(requiredType.getName());
-    }
-
-    public String[] getBeanDefinitionNames() {
-        return this.beanDefinitionMap.keySet().toArray(new String[this.beanDefinitionMap.size()]);
-    }
-
-
-    public int getBeanDefinitionCount() {
-        return this.beanDefinitionMap.size();
-    }
-
-
-    public Properties getConfig() {
-        return this.reader.getConfig();
     }
 
     private AdvisedSupport getAopConfig() {
