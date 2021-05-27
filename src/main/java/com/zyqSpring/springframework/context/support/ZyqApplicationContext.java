@@ -134,6 +134,7 @@ public class ZyqApplicationContext extends ZyqDefaultListableBeanFactory impleme
      * 过滤掉没有被@Autowired注解标注的变量
      * 拿到被注解变量的类名，并从IOC容器中找到该类的实例（上一步已经初始化放在容器了）
      * 将变量的实例通过反射赋值到变量中
+     * // 可能会涉及到循环依赖？  这里不做处理
      * @param beanName
      * @param zyqBeanDefinition
      * @param zyqBeanWrapper
@@ -178,20 +179,24 @@ public class ZyqApplicationContext extends ZyqDefaultListableBeanFactory impleme
         //2.反射实例化，得到一个对象
         Object instance = null;
         try {
-            Class<?> clazz = Class.forName(beanClassName);
-            instance = clazz.newInstance();
-
-            //############填充如下代码###############
-            //获取AOP配置
-            AdvisedSupport aopConfig = getAopConfig();
-            aopConfig.setTargetClass(clazz);
-            aopConfig.setTarget(instance);
-            //符合PointCut的规则的话，将创建代理对象
-            if(aopConfig.pointCutMatch()) {
-                //创建代理
-                instance = createProxy(aopConfig).getProxy();
+            if (this.factoryBeanObjectCache.containsKey(beanClassName)) {
+                instance = factoryBeanObjectCache.get(beanClassName);
+            } else {
+                Class<?> clazz = Class.forName(beanClassName);
+                instance = clazz.newInstance();
+                this.factoryBeanObjectCache.put(beanClassName, instance);
+                //############填充如下代码###############
+                //获取AOP配置
+                AdvisedSupport aopConfig = getAopConfig();
+                aopConfig.setTargetClass(clazz);
+                aopConfig.setTarget(instance);
+                //符合PointCut的规则的话，将创建代理对象
+                if(aopConfig.pointCutMatch()) {
+                    //创建代理
+                    instance = createProxy(aopConfig).getProxy();
+                }
+                //#############填充完毕##############
             }
-            //#############填充完毕##############
         } catch (Exception e) {
             System.out.println("实例化对象失败 类名--" + beanClassName);
         }

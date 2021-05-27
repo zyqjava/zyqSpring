@@ -35,6 +35,7 @@ public class ZyqBeanDefinitionReader {
      */
     public ZyqBeanDefinitionReader(String... locations) {
         try ( //定位，通过url定位找到配置文件，然后转换成文件流
+              // Spring中使用策略模式读取，这里直接将classpath: 替换成空
               InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(locations[0].replace("classpath:", ""))) {
         //加载，保存为properties
             config.load(inputStream);
