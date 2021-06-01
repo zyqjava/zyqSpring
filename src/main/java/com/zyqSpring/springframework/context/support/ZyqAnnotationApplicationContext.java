@@ -4,10 +4,9 @@ import com.zyqSpring.boot.annotation.Configuration;
 import com.zyqSpring.boot.annotation.ZyqComponentScan;
 import com.zyqSpring.springframework.annotation.ZyqAutowired;
 import com.zyqSpring.springframework.aop.AopProxy;
-import com.zyqSpring.springframework.aop.CglibAopProxy;
-import com.zyqSpring.springframework.aop.JdkDynamicAopProxy;
 import com.zyqSpring.springframework.aop.config.AopConfig;
 import com.zyqSpring.springframework.aop.support.AdvisedSupport;
+import com.zyqSpring.springframework.aop.support.ProxyFactory;
 import com.zyqSpring.springframework.beans.ZyqBeanWrapper;
 import com.zyqSpring.springframework.beans.config.ZyqBeanDefinition;
 import com.zyqSpring.springframework.beans.config.ZyqBeanPostProcessor;
@@ -17,6 +16,7 @@ import com.zyqSpring.springframework.context.ApplicationContext;
 import com.zyqSpring.springframework.core.factory.ZyqDefaultListableBeanFactory;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,7 +44,7 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
             //注册配置类
             register(annotatedClasses);
             //step1:定位，定位配置文件
-            reader = new ZyqAnnotationBeanDefinitionReader();
+            reader = new ZyqAnnotationBeanDefinitionReader(scanPackages);
             //注入IOC容器
             refresh();
         } catch (Exception e) {
@@ -72,6 +72,7 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
     }
 
     private void register(Class<?>[] annotatedClasses) {
+        List<String> packagesTemp = new ArrayList<>();
         for (Class<?> annotatedClass : annotatedClasses) {
             if (!annotatedClass.isAnnotationPresent(Configuration.class)) {
                 continue;
@@ -79,9 +80,12 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
             if (annotatedClass.isAnnotationPresent(ZyqComponentScan.class)) {
                 ZyqComponentScan annotation = annotatedClass.getAnnotation(ZyqComponentScan.class);
                 String[] packages = annotation.value();
-
+                for (String aPackage : packages) {
+                    packagesTemp.add(aPackage);
+                }
             }
         }
+        scanPackages = packagesTemp.toArray(new String[packagesTemp.size()]);
     }
 
 
@@ -245,10 +249,7 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
     private AopProxy createProxy(AdvisedSupport aopConfig) {
         Class<?> targetClass = aopConfig.getTargetClass();
         //如果是接口，默认使用JDK
-        if (targetClass.getInterfaces().length > 0) {
-            return new JdkDynamicAopProxy(aopConfig);
-        }
-        return new CglibAopProxy(aopConfig);
+        return ProxyFactory.getProxy(aopConfig, targetClass);
     }
 
     private Object getSingleton(String beanName) {

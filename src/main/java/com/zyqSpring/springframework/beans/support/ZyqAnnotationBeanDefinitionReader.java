@@ -1,6 +1,5 @@
 package com.zyqSpring.springframework.beans.support;
 
-import com.zyqSpring.boot.annotation.ZyqComponentScan;
 import com.zyqSpring.springframework.annotation.ZyqComponent;
 import com.zyqSpring.springframework.beans.config.ZyqBeanDefinition;
 
@@ -27,19 +26,13 @@ public class ZyqAnnotationBeanDefinitionReader {
      * 将我们传入的配置文件路径解析为文件流
      * 将文件流保存为Properties，方便我们通过Key-Value的形式来读取配置文件信息
      * 根据配置文件中配置好的扫描路径，开始扫描该路径下的所有class文件并保存到集合中
-     * @param annotatedClasses
+     * @param packages
      */
-    public ZyqAnnotationBeanDefinitionReader(Class<?>... annotatedClasses) {
+    public ZyqAnnotationBeanDefinitionReader(String[]... packages) {
         try {
-            for (Class<?> annotatedClass : annotatedClasses) {
-                //扫描,扫描资源文件.class，并保存到集合中
-                if (!annotatedClass.isAnnotationPresent(ZyqComponentScan.class)) {
-                    continue;
-                }
-                ZyqComponentScan annotation = annotatedClass.getAnnotation(ZyqComponentScan.class);
-                String[] packages = annotation.value();
-                if (packages.length > 0) {
-                    for (String basePackage : packages) {
+            for (String[] pas : packages) {
+                if (pas.length > 0) {
+                    for (String basePackage : pas) {
                         doScanner(basePackage);
                     }
                 }
