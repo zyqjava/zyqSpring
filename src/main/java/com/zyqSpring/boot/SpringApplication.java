@@ -11,14 +11,10 @@ import org.apache.catalina.LifecycleException;
  */
 public class SpringApplication {
 
-    public static  void run(Class<?> clazz, String args) throws LifecycleException, InterruptedException, IllegalAccessException, InstantiationException {
-
-        //加载配置类
-        String packageName = clazz.getPackage().getName();
-
+    public static  void run(Class<?> clazz, String[] args) throws LifecycleException, InterruptedException, IllegalAccessException, InstantiationException {
 
         //初始化spring
-        ApplicationContext applicationContext = new ZyqAnnotationApplicationContext();
+        ApplicationContext applicationContext = new ZyqAnnotationApplicationContext(clazz);
 
         //启动Tomcat/netty
         Protocol protocol = ProtocolFactory.getProtocol();

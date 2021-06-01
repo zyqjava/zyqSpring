@@ -2,7 +2,8 @@ package com.zyqSpring.mvc.servlet;
 
 import com.zyqSpring.springframework.annotation.ZyqController;
 import com.zyqSpring.springframework.annotation.ZyqRequestMapping;
-import com.zyqSpring.springframework.context.support.ZyqApplicationContext;
+import com.zyqSpring.springframework.context.support.ZyqAnnotationApplicationContext;
+import com.zyqSpring.springframework.context.support.ZyqAnnotationApplicationContextAware;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -24,7 +25,7 @@ public class DispatcherServlet extends HttpServlet {
     /**配置文件地址，从web.xml中获取*/
     private static final String CONTEXT_CONFIG_LOCATION = "contextConfigLocation";
 
-    private ZyqApplicationContext applicationContext;
+    private ZyqAnnotationApplicationContext applicationContext;
 
     private List<HandlerMapping> handlerMappings = new ArrayList<>();
 
@@ -120,13 +121,13 @@ public class DispatcherServlet extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         //1、初始化spring容器
-        applicationContext = new ZyqApplicationContext(CONTEXT_CONFIG_LOCATION);
+        applicationContext = new ZyqAnnotationApplicationContextAware().getAnnotationApplicationContext();
 
         //2、初始化spring mvc九大组件
         initStrategies(applicationContext);
     }
 
-    private void initStrategies(ZyqApplicationContext applicationContext) {
+    private void initStrategies(ZyqAnnotationApplicationContext applicationContext) {
         //多文件上传的组件
 
         //初始化本地语言环境
@@ -150,7 +151,7 @@ public class DispatcherServlet extends HttpServlet {
 
     }
 
-    private void initViewResolvers(ZyqApplicationContext applicationContext) {
+    private void initViewResolvers(ZyqAnnotationApplicationContext applicationContext) {
         //配置文件中拿到模板的存放目录
         String templateRoot = applicationContext.getConfig().getProperty("templateRoot");
         String templateRootPath = this.getClass().getClassLoader().getResource(templateRoot).getFile();
@@ -168,7 +169,7 @@ public class DispatcherServlet extends HttpServlet {
      * 将HandlerMapping添加到集合中保存起来
      * @param applicationContext
      */
-    private void initHandlerMappings(ZyqApplicationContext applicationContext) {
+    private void initHandlerMappings(ZyqAnnotationApplicationContext applicationContext) {
         String[] beanNames = applicationContext.getBeanDefinitionNames();
 
         try {
@@ -208,7 +209,7 @@ public class DispatcherServlet extends HttpServlet {
         }
     }
 
-    private void initHandlerAdapters(ZyqApplicationContext applicationContext) {
+    private void initHandlerAdapters(ZyqAnnotationApplicationContext applicationContext) {
         //一个HandlerMapping对应一个HandlerAdapter
         for (HandlerMapping handlerMapping : this.handlerMappings) {
             this.handlerAdapters.put(handlerMapping, new HandlerAdapter());

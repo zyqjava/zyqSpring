@@ -1,5 +1,6 @@
 package com.zyqSpring.springframework.context;
 
+import com.zyqSpring.springframework.context.support.ZyqAnnotationApplicationContext;
 import com.zyqSpring.springframework.context.support.ZyqApplicationContext;
 
 /**
@@ -7,4 +8,7 @@ import com.zyqSpring.springframework.context.support.ZyqApplicationContext;
  */
 public interface ZyqApplicationContextAware {
     void setApplicationContext(ZyqApplicationContext applicationContext);
+    void setApplicationContext(ZyqAnnotationApplicationContext zyqAnnotationApplicationContext);
+    ZyqAnnotationApplicationContext getAnnotationApplicationContext();
+    ZyqApplicationContext getApplicationContext();
 }

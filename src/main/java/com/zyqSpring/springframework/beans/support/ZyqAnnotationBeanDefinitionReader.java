@@ -1,5 +1,7 @@
 package com.zyqSpring.springframework.beans.support;
 
+import com.zyqSpring.boot.annotation.ZyqComponentScan;
+import com.zyqSpring.boot.annotation.ZyqSpringApplication;
 import com.zyqSpring.springframework.annotation.ZyqComponent;
 import com.zyqSpring.springframework.beans.config.ZyqBeanDefinition;
 
@@ -20,6 +22,42 @@ public class ZyqAnnotationBeanDefinitionReader {
 
     /**保存了所有Bean的className*/
     private List<String> registerBeanClasses = new ArrayList<>();
+
+    /**保存了所有ConfigurationBean的className*/
+    private List<String> registerConfigurationClasses = new ArrayList<>();
+
+
+    /**
+     * 把@Configuration注册到容器
+     * @param basePackages
+     */
+    public ZyqAnnotationBeanDefinitionReader(String basePackages) {
+        try {
+            doScannerConfiguration(basePackages);
+        } catch (Exception e) {
+            System.out.println("读取文件失败" + e.getMessage());
+        }
+
+    }
+
+    private void doScannerConfiguration(String basePackages) {
+        URL url = this.getClass().getClassLoader().getResource(basePackages.replaceAll("\\.", "/"));
+        File files = new File(url.getFile());
+        for (File file : files.listFiles()) {
+            if (file.isDirectory()) {
+                //如果是目录则递归调用，直到找到class
+                doScanner(basePackages + "." + file.getName());
+            } else {
+                if (!file.getName().endsWith(".class")) {
+                    //如果不是.class文件，则忽略
+                    continue;
+                }
+                String className = basePackages + "." + file.getName().replace(".class", "");
+                //className保存到集合
+                registerConfigurationClasses.add(className);
+            }
+        }
+    }
 
     /**
      * 完成BeanDefinitionReader中的构造方法，流程分为三步走：
@@ -63,8 +101,45 @@ public class ZyqAnnotationBeanDefinitionReader {
                 String className = scanPackage + "." + file.getName().replace(".class", "");
                 //className保存到集合
                 registerBeanClasses.add(className);
+                registerConfigurationClasses.add(className);
             }
         }
+    }
+
+    public List<String> loadConfigurationBeanDefinitions() {
+        List<String> packages = new ArrayList<>();
+        try {
+            for (String className : registerConfigurationClasses) {
+                Class<?> beanClass = Class.forName(className);
+                //接口无法被实例化、所以无需封装
+                if (beanClass.isInterface()) {
+                    continue;
+                }
+
+                Annotation[] annotations = beanClass.getAnnotations();
+                if (annotations.length == 0) {
+                    continue;
+                }
+
+                for (Annotation annotation : annotations) {
+                    Class<? extends Annotation> annotationType = annotation.annotationType();
+                    if (annotationType.isAnnotationPresent(ZyqSpringApplication.class)) {
+                        break;
+                    }
+                    //只考虑被@Component注解的class
+                    if (annotationType.isAnnotationPresent(ZyqComponentScan.class)) {
+                        ZyqComponentScan zyqComponentScan = (ZyqComponentScan) annotation;
+                        String[] value = zyqComponentScan.value();
+                        for (String s : value) {
+                            packages.add(s);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("封装配置类出错");
+        }
+        return packages;
     }
 
     /**

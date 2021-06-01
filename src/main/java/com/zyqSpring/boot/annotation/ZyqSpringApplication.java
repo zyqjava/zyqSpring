@@ -10,7 +10,6 @@ import java.lang.annotation.*;
 @Documented
 @Inherited
 @Configuration
-@ZyqComponentScan
 public @interface ZyqSpringApplication {
     String[] scanBasePackages() default {};
     Class<?>[] scanBasePackageClasses() default {};
