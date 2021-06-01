@@ -1,5 +1,7 @@
 package com.zyqSpring.springframework.context.support;
 
+import com.zyqSpring.boot.annotation.Configuration;
+import com.zyqSpring.boot.annotation.ZyqComponentScan;
 import com.zyqSpring.springframework.annotation.ZyqAutowired;
 import com.zyqSpring.springframework.aop.AopProxy;
 import com.zyqSpring.springframework.aop.CglibAopProxy;
@@ -9,6 +11,7 @@ import com.zyqSpring.springframework.aop.support.AdvisedSupport;
 import com.zyqSpring.springframework.beans.ZyqBeanWrapper;
 import com.zyqSpring.springframework.beans.config.ZyqBeanDefinition;
 import com.zyqSpring.springframework.beans.config.ZyqBeanPostProcessor;
+import com.zyqSpring.springframework.beans.support.ZyqAnnotationBeanDefinitionReader;
 import com.zyqSpring.springframework.beans.support.ZyqBeanDefinitionReader;
 import com.zyqSpring.springframework.context.ApplicationContext;
 import com.zyqSpring.springframework.core.factory.ZyqDefaultListableBeanFactory;
@@ -24,7 +27,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFactory implements ApplicationContext {
 
     //配置文件的路径
-    private ZyqBeanDefinitionReader reader;
+    private ZyqAnnotationBeanDefinitionReader reader;
+
+    private String[] scanPackages;
 
     /**保存了真正实例化的对象*/
     private Map<String, ZyqBeanWrapper> factoryBeanInstanceCache = new ConcurrentHashMap<>();
@@ -32,15 +37,14 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
     private Map<String, Object> factoryBeanObjectCache = new ConcurrentHashMap<>();
 
     public ZyqAnnotationApplicationContext() {
-        //step1:定位，定位配置文件
-        reader = new ZyqBeanDefinitionReader();
     }
 
     public ZyqAnnotationApplicationContext(Class<?>... annotatedClasses) {
-        this();
         try {
             //注册配置类
             register(annotatedClasses);
+            //step1:定位，定位配置文件
+            reader = new ZyqAnnotationBeanDefinitionReader();
             //注入IOC容器
             refresh();
         } catch (Exception e) {
@@ -49,7 +53,6 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
     }
 
     public ZyqAnnotationApplicationContext(String... basePackages) {
-        this();
         try {
             scan(basePackages);
             refresh();
@@ -69,7 +72,16 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
     }
 
     private void register(Class<?>[] annotatedClasses) {
+        for (Class<?> annotatedClass : annotatedClasses) {
+            if (!annotatedClass.isAnnotationPresent(Configuration.class)) {
+                continue;
+            }
+            if (annotatedClass.isAnnotationPresent(ZyqComponentScan.class)) {
+                ZyqComponentScan annotation = annotatedClass.getAnnotation(ZyqComponentScan.class);
+                String[] packages = annotation.value();
 
+            }
+        }
     }
 
 

@@ -14,7 +14,7 @@ import java.util.Properties;
 /**
  * Created by Enzo Cotter on 2021/5/27.
  */
-public class ZyqAnnotationBeanDedinitionReader {
+public class ZyqAnnotationBeanDefinitionReader {
 
     //配置文件
     private Properties config = new Properties();
@@ -29,7 +29,7 @@ public class ZyqAnnotationBeanDedinitionReader {
      * 根据配置文件中配置好的扫描路径，开始扫描该路径下的所有class文件并保存到集合中
      * @param annotatedClasses
      */
-    public ZyqAnnotationBeanDedinitionReader(Class<?>... annotatedClasses) {
+    public ZyqAnnotationBeanDefinitionReader(Class<?>... annotatedClasses) {
         try {
             for (Class<?> annotatedClass : annotatedClasses) {
                 //扫描,扫描资源文件.class，并保存到集合中
