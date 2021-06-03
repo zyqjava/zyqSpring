@@ -46,8 +46,6 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
         try {
             //注册配置类
             register(annotatedClasses);
-            //step1:定位，定位配置文件
-            reader = new ZyqAnnotationBeanDefinitionReader(scanPackages.toArray(new String[scanPackages.size()]));
             //注入IOC容器
             refresh();
         } catch (Exception e) {
@@ -133,6 +131,8 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
 
 
     public void refresh() throws Exception {
+        //step1:定位，定位配置文件
+        reader = new ZyqAnnotationBeanDefinitionReader(scanPackages.toArray(new String[scanPackages.size()]));
         //step2:加载配置文件，扫描相关的类，把他们封装成BeanDefinition
         List<ZyqBeanDefinition> beanDefinitions = reader.loadBeanDefinitions();
         //step3:注册，把配置信息放到容器里面（ioc容器）
