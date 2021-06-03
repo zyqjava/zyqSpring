@@ -3,7 +3,6 @@ package com.zyqSpring.mvc.servlet;
 import com.zyqSpring.springframework.annotation.ZyqController;
 import com.zyqSpring.springframework.annotation.ZyqRequestMapping;
 import com.zyqSpring.springframework.context.support.ZyqAnnotationApplicationContext;
-import com.zyqSpring.springframework.context.support.ZyqAnnotationApplicationContextAware;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -120,9 +119,15 @@ public class DispatcherServlet extends HttpServlet {
 
     @Override
     public void init(ServletConfig config) throws ServletException {
-        //1、初始化spring容器
-        applicationContext = new ZyqAnnotationApplicationContextAware().getAnnotationApplicationContext();
 
+        //1、初始化spring容器
+        if (config.getServletContext().getAttribute(ZyqAnnotationApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE) instanceof ZyqAnnotationApplicationContext) {
+            applicationContext = (ZyqAnnotationApplicationContext)
+                    config.getServletContext().getAttribute(ZyqAnnotationApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
+        } else {
+            System.out.println("获取spring容器失败!!!");
+            throw new ServletException("获取spring容器失败!!!");
+        }
         //2、初始化spring mvc九大组件
         initStrategies(applicationContext);
     }

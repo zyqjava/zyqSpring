@@ -37,6 +37,8 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
     //单例的IOC容器缓存
     private Map<String, Object> factoryBeanObjectCache = new ConcurrentHashMap<>();
 
+    public static final String ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE = "applicationContext";
+
     public ZyqAnnotationApplicationContext() {
     }
 
@@ -297,6 +299,8 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
         ZyqBeanWrapper beanWrapper = factoryBeanInstanceCache.get(beanName);
         return beanWrapper == null ? null : beanWrapper.getWrappedInstance();
     }
+
+
     public String[] getBeanDefinitionNames() {
         return this.beanDefinitionMap.keySet().toArray(new String[this.beanDefinitionMap.size()]);
     }

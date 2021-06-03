@@ -1,12 +1,15 @@
 package com.zyqSpring.mvc.support;
 
-import com.zyqSpring.mvc.servlet.DispatcherServlet;
 import org.apache.catalina.*;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.core.StandardEngine;
 import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.startup.Tomcat;
+import org.apache.catalina.webresources.DirResourceSet;
+import org.apache.catalina.webresources.StandardRoot;
+
+import java.io.File;
 
 public class HttpServer {
 
@@ -15,9 +18,31 @@ public class HttpServer {
     private static final String ROOT_PATH = "/*";
 
 
-    public void start(String hostName, Integer port) {
+    public void start() throws LifecycleException {
+        // 创建Tomcat容器
+        Tomcat tomcatServer = new Tomcat();
+        // 端口号设置
+        tomcatServer.setPort(9090);
+        // 读取项目路径 加载静态资源
+        StandardContext ctx = (StandardContext) tomcatServer.addWebapp("/", new File("src/main").getAbsolutePath());
+        // 禁止重新载入
+        ctx.setReloadable(false);
+        // class文件读取地址
+        File additionWebInfClasses = new File("target/classes");
+        // 创建WebRoot
+        WebResourceRoot resources = new StandardRoot(ctx);
+        // tomcat内部读取Class执行
+        resources.addPreResources(
+                new DirResourceSet(resources, "/WEB-INF/classes", additionWebInfClasses.getAbsolutePath(), "/"));
+        tomcatServer.start();
+        // 异步等待请求执行
+        tomcatServer.getServer().await();
+    }
 
-        //通过server.xml的格式
+    public void start(String hostName, Integer port) throws LifecycleException {
+
+
+       //通过server.xml的格式
         // 实例一个tomcat
         Tomcat tomcat = new Tomcat();
 
@@ -45,10 +70,9 @@ public class HttpServer {
         Host host = new StandardHost();
         host.setName(hostName);
 
+        tomcat.setBaseDir(new File("src/main").getAbsolutePath());
         // 构建Context
-        String contextPath = "";
-        Context context = new StandardContext();
-        context.setPath(contextPath);
+        Context context = (StandardContext) tomcat.addWebapp("/", new File("src/main").getAbsolutePath());
         context.addLifecycleListener(new Tomcat.FixContextListener()); // 生命周期监听器
 
         // 然后按照server.xml，一层层把子节点添加到父节点
@@ -57,21 +81,22 @@ public class HttpServer {
 
         service.setContainer(engine);
         service.addConnector(connector);
+
         // service在getServer时就被添加到server节点了
 
         // tomcat是一个servlet,设置路径与映射
         // 定义一个处理器
-        tomcat.addServlet(contextPath, DISPATCHER, new DispatcherServlet());
+        /*tomcat.addServlet(contextPath, DISPATCHER, "");
         // Servlet映射
-        context.addServletMappingDecoded(ROOT_PATH, DISPATCHER);
+        context.addServletMappingDecoded(ROOT_PATH, DISPATCHER);*/
 
         try {
             tomcat.start();
+            System.out.println("tomcat服务已启动");
             tomcat.getServer().await();     // 接受请求
         } catch (LifecycleException e) {
             e.printStackTrace();
         }
-        System.out.println("tomcat服务已启动");
     }
 
 }
