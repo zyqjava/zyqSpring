@@ -35,7 +35,7 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
     /**保存了真正实例化的对象*/
     private Map<String, ZyqBeanWrapper> factoryBeanInstanceCache = new ConcurrentHashMap<>();
     //单例的IOC容器缓存
-    private Map<String, Object> factoryBeanObjectCache = new ConcurrentHashMap<>();
+    private Map<String, Object> singletonBeanObjectCache = new ConcurrentHashMap<>();
 
     public static final String ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE = "applicationContext";
 
@@ -146,7 +146,13 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
             String beanName = beanDefinitionEntry.getKey();
             if (!beanDefinitionEntry.getValue().isLazyInit()) {
                 try {
-                    getBean(beanName);
+                    if (beanDefinitionEntry.getValue().getScope().equals("singleton")) {
+                        getBean(beanName);
+                    } else {
+                        //创建bean对象
+                        Object bean = createBean(beanDefinitionEntry.getValue());
+                        singletonBeanObjectCache.put(beanName, bean);
+                    }
                 } catch (Exception e) {
                     System.out.println("获取bean失败!!!");
                 }
@@ -160,9 +166,14 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
             if (beanDefinitionMap.containsKey(beanDefinition.getFactoryBeanName())) {
                 throw new Exception("该" + beanDefinition.getFactoryBeanName() + "已存在");
             }
-
             beanDefinitionMap.put(beanDefinition.getFactoryBeanName(), beanDefinition);
         }
+    }
+
+    private Object createBean(ZyqBeanDefinition beanDefinition) throws Exception {
+        Class aClass = beanDefinition.getClass();
+        Object instance = aClass.getDeclaredConstructor().newInstance();
+        return instance;
     }
 
     /**
@@ -265,12 +276,12 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
         //2.反射实例化，得到一个对象
         Object instance = null;
         try {
-            if (this.factoryBeanObjectCache.containsKey(beanClassName)) {
-                instance = factoryBeanObjectCache.get(beanClassName);
+            if (this.singletonBeanObjectCache.containsKey(beanClassName)) {
+                instance = singletonBeanObjectCache.get(beanClassName);
             } else {
                 Class<?> clazz = Class.forName(beanClassName);
                 instance = clazz.newInstance();
-                this.factoryBeanObjectCache.put(beanClassName, instance);
+                this.singletonBeanObjectCache.put(beanClassName, instance);
                 //############填充如下代码###############
                 //获取AOP配置
                /* AdvisedSupport aopConfig = getAopConfig();

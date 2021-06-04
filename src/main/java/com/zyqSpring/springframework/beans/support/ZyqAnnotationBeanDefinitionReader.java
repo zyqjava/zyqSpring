@@ -39,11 +39,6 @@ public class ZyqAnnotationBeanDefinitionReader {
     public ZyqAnnotationBeanDefinitionReader(String basePackages) {
         try {
             doScannerConfiguration(basePackages);
-            if (registerConfigurationClasses != null && registerConfigurationClasses.size() > 0) {
-                for (String registerConfigurationClass : registerConfigurationClasses) {
-                    PropertiesUtils.onLoadProperties(registerConfigurationClass, config, this.getClass().getClassLoader());
-                }
-            }
         } catch (Exception e) {
             System.out.println("读取文件失败" + e.getMessage());
         }
@@ -85,6 +80,12 @@ public class ZyqAnnotationBeanDefinitionReader {
                 if (pas.length > 0) {
                     for (String basePackage : pas) {
                         doScanner(basePackage);
+
+                        if (registerConfigurationProperties != null && registerConfigurationProperties.size() > 0) {
+                            for (String registerConfigurationClass : registerConfigurationProperties) {
+                                PropertiesUtils.onLoadProperties(registerConfigurationClass, config, this.getClass().getClassLoader());
+                            }
+                        }
                     }
                 }
             }
@@ -107,6 +108,11 @@ public class ZyqAnnotationBeanDefinitionReader {
                 //如果是目录则递归调用，直到找到class
                 doScanner(scanPackage + "." + file.getName());
             } else {
+
+                if (file.getName().endsWith(".properties")) {
+                    registerConfigurationProperties.add(file.getName());
+                }
+
                 if (!file.getName().endsWith(".class")) {
                     //如果不是.class文件，则忽略
                     continue;
