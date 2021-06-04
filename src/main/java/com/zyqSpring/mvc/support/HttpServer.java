@@ -1,5 +1,6 @@
 package com.zyqSpring.mvc.support;
 
+import com.zyqSpring.mvc.servlet.DispatcherServlet;
 import org.apache.catalina.*;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.StandardContext;
@@ -86,9 +87,9 @@ public class HttpServer {
 
         // tomcat是一个servlet,设置路径与映射
         // 定义一个处理器
-        /*tomcat.addServlet(contextPath, DISPATCHER, "");
-        // Servlet映射
-        context.addServletMappingDecoded(ROOT_PATH, DISPATCHER);*/
+        tomcat.addServlet(context.getPath(), DISPATCHER, new DispatcherServlet());
+        //Servlet映射
+        context.addServletMappingDecoded(ROOT_PATH, DISPATCHER);
 
         try {
             tomcat.start();

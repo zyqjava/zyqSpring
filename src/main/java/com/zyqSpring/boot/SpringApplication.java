@@ -14,10 +14,12 @@ public class SpringApplication {
 
     public static  void run(Class<?> clazz, String[] args) throws LifecycleException, InterruptedException, IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
 
+        SpringContextInitializer.initApplicationContext(clazz, args);
+
         //启动Tomcat/netty
         Protocol protocol = ProtocolFactory.getProtocol();
         protocol.start();
 
-        SpringContextInitializer.initApplicationContext(clazz, args);
+
     }
 }

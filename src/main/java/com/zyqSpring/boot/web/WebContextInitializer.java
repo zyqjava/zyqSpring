@@ -10,12 +10,12 @@ public abstract class WebContextInitializer extends AbstractDispatcherServletIni
 
     @Override
     protected ZyqAnnotationApplicationContext createRootApplicationContext() {
-        Class<?>[] configClasses = getRootConfigClasses();
+        Class<?> configClasses = getRootConfigClasses();
         //创建spring的根应用上下文
         ZyqAnnotationApplicationContext rootAppContext = new ZyqAnnotationApplicationContext(configClasses);
         return rootAppContext;
     }
 
-    protected abstract Class<?>[] getRootConfigClasses();
+    protected abstract Class<?> getRootConfigClasses();
 
 }

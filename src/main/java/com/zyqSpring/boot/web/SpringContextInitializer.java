@@ -10,7 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 public class SpringContextInitializer {
 
     public static void initApplicationContext(Class< ? > clazz, String[] args) throws LifecycleException, InterruptedException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-
+        new SpringWebAppInitializer();
     }
 
 }
