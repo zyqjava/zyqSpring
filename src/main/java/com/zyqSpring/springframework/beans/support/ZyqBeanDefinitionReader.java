@@ -2,9 +2,9 @@ package com.zyqSpring.springframework.beans.support;
 
 import com.zyqSpring.springframework.annotation.ZyqComponent;
 import com.zyqSpring.springframework.beans.config.ZyqBeanDefinition;
+import com.zyqSpring.springframework.utils.PropertiesUtils;
 
 import java.io.File;
-import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.net.URL;
 import java.util.ArrayList;
@@ -34,17 +34,15 @@ public class ZyqBeanDefinitionReader {
      * @param locations
      */
     public ZyqBeanDefinitionReader(String... locations) {
-        try ( //定位，通过url定位找到配置文件，然后转换成文件流
-              // Spring中使用策略模式读取，这里直接将classpath: 替换成空
-              InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(locations[0].replace("classpath:", ""))) {
-        //加载，保存为properties
-            config.load(inputStream);
-        } catch (Exception e) {
-            System.out.println("读取文件失败" + e.getMessage());
+        for (String location : locations) {
+            //定位，通过url定位找到配置文件，然后转换成文件流
+            // Spring中使用策略模式读取，这里直接将classpath: 替换成空
+            PropertiesUtils.onLoadProperties(location, config, this.getClass().getClassLoader());
         }
         //扫描,扫描资源文件.class，并保存到集合中
         doScanner(config.getProperty(SCAN_PACKAGE));
     }
+
 
     /**
      * doScanner()是递归方法，当它发现当前扫描的文件是目录时要发生递归，

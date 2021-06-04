@@ -16,5 +16,6 @@ public class ZyqBeanDefinition {
     private String beanClassName;
     private boolean lazyInit = false;
     private String factoryBeanName;
+    private String scope;
     public ZyqBeanDefinition() {}
 }
