@@ -28,7 +28,7 @@ public class View {
                        HttpServletRequest request,
                        HttpServletResponse response) throws Exception {
         StringBuilder sb = new StringBuilder();
-        RandomAccessFile randomAccessFile = new RandomAccessFile(this.viewFile, "");
+        RandomAccessFile randomAccessFile = new RandomAccessFile(this.viewFile, "r");
         String line;
 
         while (null != (line = randomAccessFile.readLine())) {
