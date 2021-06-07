@@ -16,7 +16,9 @@ public class HttpServer {
 
     private static final String DISPATCHER = "dispatcher";
 
-    private static final String ROOT_PATH = "/*";
+    private static final String ROOT_PATH = "/";
+
+    private static final String BASE_DOC = "src/main";
 
 
     public void start() throws LifecycleException {
@@ -25,7 +27,7 @@ public class HttpServer {
         // 端口号设置
         tomcatServer.setPort(9090);
         // 读取项目路径 加载静态资源
-        StandardContext ctx = (StandardContext) tomcatServer.addWebapp("/", new File("src/main").getAbsolutePath());
+        StandardContext ctx = (StandardContext) tomcatServer.addWebapp(ROOT_PATH, new File(BASE_DOC).getAbsolutePath());
         // 禁止重新载入
         ctx.setReloadable(false);
         // class文件读取地址
@@ -71,9 +73,9 @@ public class HttpServer {
         Host host = new StandardHost();
         host.setName(hostName);
 
-        tomcat.setBaseDir(new File("src/main").getAbsolutePath());
+        tomcat.setBaseDir(new File(BASE_DOC).getAbsolutePath());
         // 构建Context
-        Context context = (StandardContext) tomcat.addWebapp("/", new File("src/main").getAbsolutePath());
+        Context context = (StandardContext) tomcat.addWebapp(ROOT_PATH, new File(BASE_DOC).getAbsolutePath());
         context.addLifecycleListener(new Tomcat.FixContextListener()); // 生命周期监听器
 
         // 然后按照server.xml，一层层把子节点添加到父节点

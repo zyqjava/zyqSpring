@@ -13,7 +13,7 @@ import java.lang.reflect.InvocationTargetException;
 public abstract class AbstractDispatcherServletInitializer implements WebApplicationInitializer{
 
     @Override
-    public void onStartup(ServletContext servletContext) throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    public void onStartup(ServletContext servletContext) throws Exception {
         registerDispatcherServlet(servletContext);
     }
 
