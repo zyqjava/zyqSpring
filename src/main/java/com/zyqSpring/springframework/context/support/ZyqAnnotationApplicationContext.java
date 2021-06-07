@@ -7,15 +7,18 @@ import com.zyqSpring.springframework.aop.config.AopConfig;
 import com.zyqSpring.springframework.aop.framework.AopProxy;
 import com.zyqSpring.springframework.aop.framework.ProxyFactory;
 import com.zyqSpring.springframework.aop.support.AdvisedSupport;
+import com.zyqSpring.springframework.beans.InitializingBean;
 import com.zyqSpring.springframework.beans.ZyqBeanWrapper;
+import com.zyqSpring.springframework.beans.config.BeanPostProcessor;
 import com.zyqSpring.springframework.beans.config.ZyqBeanDefinition;
-import com.zyqSpring.springframework.beans.config.ZyqBeanPostProcessor;
 import com.zyqSpring.springframework.beans.support.ZyqAnnotationBeanDefinitionReader;
 import com.zyqSpring.springframework.beans.support.ZyqBeanDefinitionReader;
 import com.zyqSpring.springframework.context.ApplicationContext;
+import com.zyqSpring.springframework.context.ZyqBeanNameAware;
 import com.zyqSpring.springframework.core.factory.ZyqDefaultListableBeanFactory;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +39,8 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
     private Map<String, ZyqBeanWrapper> factoryBeanInstanceCache = new ConcurrentHashMap<>();
     //单例的IOC容器缓存
     private Map<String, Object> singletonBeanObjectCache = new ConcurrentHashMap<>();
+
+    private List<BeanPostProcessor> beanPostProcessorsList = new ArrayList<>();
 
     public static final String ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE = "applicationContext";
 
@@ -135,10 +140,27 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
         reader = new ZyqAnnotationBeanDefinitionReader(scanPackages.toArray(new String[scanPackages.size()]));
         //step2:加载配置文件，扫描相关的类，把他们封装成BeanDefinition
         List<ZyqBeanDefinition> beanDefinitions = reader.loadBeanDefinitions();
+        //注册beanProcessors
+        loadBeanProcessors(beanDefinitions);
         //step3:注册，把配置信息放到容器里面（ioc容器）
         doRegisterBeanDefinition(beanDefinitions);
         //把不是延时加载的类，提前初始化
         doAutowired();
+    }
+
+    private void loadBeanProcessors(List<ZyqBeanDefinition> beanDefinitions) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        for (ZyqBeanDefinition beanDefinition : beanDefinitions) {
+            Class<?> beanClass = Class.forName(beanDefinition.getBeanClassName());
+            //接口无法被实例化、所以无需封装
+            if (beanClass.isInterface()) {
+                continue;
+            }
+
+            if (BeanPostProcessor.class.isAssignableFrom(beanClass)) {
+                BeanPostProcessor beanPostProcessor = (BeanPostProcessor) beanClass.getDeclaredConstructor().newInstance();
+                beanPostProcessorsList.add(beanPostProcessor);
+            }
+        }
     }
 
     private void doAutowired() {
@@ -173,6 +195,14 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
     private Object createBean(ZyqBeanDefinition beanDefinition) throws Exception {
         Class aClass = beanDefinition.getClass();
         Object instance = aClass.getDeclaredConstructor().newInstance();
+
+        for (Field declaredField : aClass.getDeclaredFields()) {
+            if (declaredField.isAnnotationPresent(ZyqAutowired.class)) {
+                Object bean = getBean(declaredField.getName());
+                declaredField.setAccessible(true);
+                declaredField.set(instance, bean);
+            }
+        }
         return instance;
     }
 
@@ -202,11 +232,26 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
 
         ZyqBeanDefinition zyqBeanDefinition = this.beanDefinitionMap.get(beanName);
 
-        ZyqBeanPostProcessor postProcessor = new ZyqBeanPostProcessor();
-        postProcessor.postProcessBeforeInitialization(instance, beanName);
+        for (BeanPostProcessor beanPostProcessor : beanPostProcessorsList) {
+            beanPostProcessor.postProcessBeforeInitialization(instance, beanName);
+        }
+
 
         //1.调用反射初始化bean
         instance = instantiateBean(beanName, zyqBeanDefinition);
+
+
+        if (instance != null) {
+            if (instance instanceof ZyqBeanNameAware) {
+                ((ZyqBeanNameAware) instance).setZyqBeanName(beanName);
+            }
+        }
+
+        if (instance != null) {
+            if (instance instanceof InitializingBean) {
+                ((InitializingBean) instance).afterPropertiesSet();
+            }
+        }
 
         //2.封装对象到BeanWrapper
         ZyqBeanWrapper zyqBeanWrapper = new ZyqBeanWrapper(instance);
@@ -217,9 +262,13 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
         //注册一个全类名（com.zyqSpring.helloService）
         this.factoryBeanInstanceCache.put(zyqBeanDefinition.getBeanClassName(), zyqBeanWrapper);
 
-        postProcessor.postProcessAfterInitialization(instance, beanName);
+        for (BeanPostProcessor beanPostProcessor : beanPostProcessorsList) {
+            beanPostProcessor.postProcessAfterInitialization(instance, beanName);
+        }
         //4.注入
         populateBean(beanName, new ZyqBeanDefinition(), zyqBeanWrapper);
+
+        //5.bean
 
         return this.factoryBeanInstanceCache.get(beanName).getWrappedInstance();
     }
@@ -284,14 +333,14 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
                 this.singletonBeanObjectCache.put(beanClassName, instance);
                 //############填充如下代码###############
                 //获取AOP配置
-               /* AdvisedSupport aopConfig = getAopConfig();
+                AdvisedSupport aopConfig = getAopConfig();
                 aopConfig.setTargetClass(clazz);
                 aopConfig.setTarget(instance);
                 //符合PointCut的规则的话，将创建代理对象
                 if(aopConfig.pointCutMatch()) {
                     //创建代理
                     instance = createProxy(aopConfig).getProxy();
-                }*/
+                }
                 //#############填充完毕##############
             }
         } catch (Exception e) {

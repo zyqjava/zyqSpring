@@ -31,7 +31,6 @@ public class ZyqAnnotationBeanDefinitionReader {
     /**保存了所有properties*/
     private List<String> registerConfigurationProperties = new ArrayList<>();
 
-
     /**
      * 把@Configuration注册到容器
      * @param basePackages

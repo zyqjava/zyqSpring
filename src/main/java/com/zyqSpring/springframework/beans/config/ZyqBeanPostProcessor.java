@@ -3,13 +3,15 @@ package com.zyqSpring.springframework.beans.config;
 /**
  * Created by Enzo Cotter on 2021/5/21.
  */
-public class ZyqBeanPostProcessor {
+public class ZyqBeanPostProcessor implements BeanPostProcessor{
 
-    public Object postProcessBeforeInitialization(Object bean, String beanName) throws Exception {
+    @Override
+    public Object postProcessBeforeInitialization(Object bean, String beanName) {
         return bean;
     }
 
-    public Object postProcessAfterInitialization(Object bean, String beanName) throws Exception {
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) {
         return bean;
     }
 }
