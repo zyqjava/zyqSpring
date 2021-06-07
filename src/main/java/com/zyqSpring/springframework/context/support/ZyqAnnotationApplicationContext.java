@@ -12,11 +12,12 @@ import com.zyqSpring.springframework.beans.ZyqBeanWrapper;
 import com.zyqSpring.springframework.beans.config.BeanPostProcessor;
 import com.zyqSpring.springframework.beans.config.ZyqBeanDefinition;
 import com.zyqSpring.springframework.beans.support.ZyqAnnotationBeanDefinitionReader;
-import com.zyqSpring.springframework.beans.support.ZyqBeanDefinitionReader;
 import com.zyqSpring.springframework.context.ApplicationContext;
 import com.zyqSpring.springframework.context.ZyqBeanNameAware;
 import com.zyqSpring.springframework.core.factory.ZyqDefaultListableBeanFactory;
+import com.zyqSpring.springframework.utils.PropertiesUtils;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -59,25 +60,6 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
         }
     }
 
-    public ZyqAnnotationApplicationContext(String... basePackages) {
-        try {
-            scan(basePackages);
-            refresh();
-        } catch (Exception e) {
-            System.out.println("容器启动失败");
-        }
-    }
-
-    private void scan(String[] basePackages) {
-        //step1:定位，定位配置文件
-        ZyqBeanDefinitionReader reader = new ZyqBeanDefinitionReader();
-        if (basePackages.length > 0) {
-            for (String basePackage : basePackages) {
-                reader.doScanner(basePackage);
-            }
-        }
-    }
-
     private void register(Class<?>[] annotatedClasses) {
         List<String> packagesTemp = new ArrayList<>();
         //处理配置类
@@ -106,21 +88,14 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
             System.out.println("加载项目路径失败！！");
             throw new RuntimeException("加载项目路径失败！！");
         }
-        ZyqAnnotationBeanDefinitionReader reader = new ZyqAnnotationBeanDefinitionReader(packageNames.toArray(new String[packageNames.size()]));
+
+        reader = new ZyqAnnotationBeanDefinitionReader(packageNames.toArray(new String[packageNames.size()]));
         List<String> packages = reader.loadConfigurationBeanDefinitions();
 
-        for (String packageName : packageNames) {
-            scanPackages = new ArrayList<>();
-            scanPackages.add(packageName);
-        }
-
-
-        for (String aPackage : packages) {
-            if (scanPackages.contains(aPackage)) {
-                continue;
-            } else {
-                scanPackages.add(aPackage);
-            }
+        for (Class<?> annotatedClass : annotatedClasses) {
+            java.net.URL uri = annotatedClass.getClass().getResource("/");
+            File files = new File(uri.getPath());
+            doReaderFilesProperties(files.listFiles(), reader);
         }
 
         for (String temp : packagesTemp) {
@@ -131,13 +106,35 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
             }
         }
 
+        for (String temp : packages) {
+            if (scanPackages.contains(temp)) {
+                continue;
+            } else {
+                scanPackages.add(temp);
+            }
+        }
 
+        if (packages.size() == 0) {
+            scanPackages = packageNames;
+        }
+    }
+
+    private void doReaderFilesProperties(File[] files, ZyqAnnotationBeanDefinitionReader reader) {
+        for (File file : files) {
+            if (!file.isDirectory()) {
+                if(file.getName().endsWith(".properties")) {
+                    PropertiesUtils.onLoadProperties(file.getName(), reader.getConfig(), reader.getClass().getClassLoader());
+                }
+            } else {
+                doReaderFilesProperties(file.listFiles(), reader);
+            }
+        }
     }
 
 
     public void refresh() throws Exception {
         //step1:定位，定位配置文件
-        reader = new ZyqAnnotationBeanDefinitionReader(scanPackages.toArray(new String[scanPackages.size()]));
+        scanCustomerPack();
         //step2:加载配置文件，扫描相关的类，把他们封装成BeanDefinition
         List<ZyqBeanDefinition> beanDefinitions = reader.loadBeanDefinitions();
         //注册beanProcessors
@@ -146,6 +143,14 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
         doRegisterBeanDefinition(beanDefinitions);
         //把不是延时加载的类，提前初始化
         doAutowired();
+    }
+
+    private void scanCustomerPack() {
+        if (scanPackages != null) {
+            for (String scanPackage : scanPackages) {
+                reader.doScanner(scanPackage);
+            }
+        }
     }
 
     private void loadBeanProcessors(List<ZyqBeanDefinition> beanDefinitions) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {

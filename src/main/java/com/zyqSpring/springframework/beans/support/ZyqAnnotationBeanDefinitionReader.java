@@ -5,14 +5,11 @@ import com.zyqSpring.boot.annotation.ZyqSpringApplication;
 import com.zyqSpring.springframework.annotation.ZyqComponent;
 import com.zyqSpring.springframework.annotation.ZyqScope;
 import com.zyqSpring.springframework.beans.config.ZyqBeanDefinition;
-import com.zyqSpring.springframework.utils.PropertiesUtils;
 
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * Created by Enzo Cotter on 2021/5/27.
@@ -23,13 +20,10 @@ public class ZyqAnnotationBeanDefinitionReader {
     private Properties config = new Properties();
 
     /**保存了所有Bean的className*/
-    private List<String> registerBeanClasses = new ArrayList<>();
+    private Set<String> registerBeanClasses = new HashSet<>();
 
     /**保存了所有ConfigurationBean的className*/
-    private List<String> registerConfigurationClasses = new ArrayList<>();
-
-    /**保存了所有properties*/
-    private List<String> registerConfigurationProperties = new ArrayList<>();
+    private Set<String> registerConfigurationClasses = new HashSet<>();
 
     /**
      * 把@Configuration注册到容器
@@ -52,9 +46,7 @@ public class ZyqAnnotationBeanDefinitionReader {
                 //如果是目录则递归调用，直到找到class
                 doScanner(basePackages + "." + file.getName());
             } else {
-                if (file.getName().endsWith(".properties")) {
-                    registerConfigurationProperties.add(file.getName());
-                }
+
                 if (!file.getName().endsWith(".class")) {
                     //如果不是.class文件，则忽略
                     continue;
@@ -79,12 +71,6 @@ public class ZyqAnnotationBeanDefinitionReader {
                 if (pas.length > 0) {
                     for (String basePackage : pas) {
                         doScanner(basePackage);
-
-                        if (registerConfigurationProperties != null && registerConfigurationProperties.size() > 0) {
-                            for (String registerConfigurationClass : registerConfigurationProperties) {
-                                PropertiesUtils.onLoadProperties(registerConfigurationClass, config, this.getClass().getClassLoader());
-                            }
-                        }
                     }
                 }
             }
@@ -107,10 +93,6 @@ public class ZyqAnnotationBeanDefinitionReader {
                 //如果是目录则递归调用，直到找到class
                 doScanner(scanPackage + "." + file.getName());
             } else {
-
-                if (file.getName().endsWith(".properties")) {
-                    registerConfigurationProperties.add(file.getName());
-                }
 
                 if (!file.getName().endsWith(".class")) {
                     //如果不是.class文件，则忽略
@@ -182,31 +164,32 @@ public class ZyqAnnotationBeanDefinitionReader {
                     continue;
                 }
 
+                for (Annotation annotation : annotations) {
+                    Class<? extends Annotation> annotationType = annotation.annotationType();
+                    //只考虑被@Component注解的class
+                    if (annotationType.isAnnotationPresent(ZyqComponent.class)) {
 
-                //只考虑被@Component注解的class
-                if (beanClass.isAnnotationPresent(ZyqComponent.class)) {
+                        String scope;
+                        if (beanClass.isAnnotationPresent(ZyqScope.class)) {
+                            ZyqScope zyqScope = beanClass.getDeclaredAnnotation(ZyqScope.class);
+                            scope = zyqScope.value();
+                        } else {
+                            scope = "singleton";
+                        }
+                        //beanName有三种情况:
+                        //1、默认是类名首字母小写
+                        //2、自定义名字（这里暂不考虑）
+                        //3、接口注入
+                        beanDefinitionList.add(doCreateZyqBeanDefinition(beanClass.getName(), toLowerFirstCase(beanClass.getSimpleName()), scope));
 
-                    String scope;
-                    if (beanClass.isAnnotationPresent(ZyqScope.class)) {
-                        ZyqScope zyqScope = beanClass.getDeclaredAnnotation(ZyqScope.class);
-                        scope = zyqScope.value();
-                    } else {
-                        scope = "singleton";
+                        Class<?>[] interfaces = beanClass.getInterfaces();
+                        for (Class<?> anInterface : interfaces) {
+                            //接口和实现类之间的关系也需要封装
+                            beanDefinitionList.add(doCreateZyqBeanDefinition(beanClass.getName(), toLowerFirstCase(anInterface.getSimpleName()), scope));
+                        }
+                        break;
                     }
-                    //beanName有三种情况:
-                    //1、默认是类名首字母小写
-                    //2、自定义名字（这里暂不考虑）
-                    //3、接口注入
-                    beanDefinitionList.add(doCreateZyqBeanDefinition(beanClass.getName(), toLowerFirstCase(beanClass.getSimpleName()), scope));
-
-                    Class<?>[] interfaces = beanClass.getInterfaces();
-                    for (Class<?> anInterface : interfaces) {
-                        //接口和实现类之间的关系也需要封装
-                        beanDefinitionList.add(doCreateZyqBeanDefinition(beanClass.getName(), toLowerFirstCase(anInterface.getSimpleName()), scope));
-                    }
-                    break;
                 }
-
             }
         } catch (Exception e) {
             System.out.println("封装beanDefinition出错");
