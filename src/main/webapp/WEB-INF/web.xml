@@ -9,7 +9,7 @@
     <servlet>
         <servlet-name>mvc</servlet-name>
         <!--配置Servlet-->
-        <servlet-class>com.zyqSpring.mvc.servlet.DispatcherServlet</servlet-class>
+        <servlet-class>org.zyqSpring.mvc.servlet.DispatcherServlet</servlet-class>
         <init-param>
             <param-name>contextConfigLocation</param-name>
             <!--指定配置文件路径-->

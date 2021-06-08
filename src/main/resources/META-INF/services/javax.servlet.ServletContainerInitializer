@@ -1,1 +1,1 @@
-com.zyqSpring.boot.web.TomcatServletContainerInitializer
+org.zyqSpring.boot.web.TomcatServletContainerInitializer
