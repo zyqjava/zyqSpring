@@ -18,7 +18,7 @@ public class HttpServer {
 
     private static final String ROOT_PATH = "/";
 
-    private static final String BASE_DOC = "src/main";
+    private static final String BASE_DOC = "src/main/java";
 
 
     public void start() throws LifecycleException {
