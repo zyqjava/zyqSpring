@@ -12,7 +12,6 @@ import java.util.List;
  */
 public class FilesParseUtils {
 
-
     public Class<?> getApplicationClass(String root) throws ClassNotFoundException {
         List<String> filePaths = new ArrayList<>();
         List<String> packages = getAllPackages(root, filePaths);
@@ -24,7 +23,7 @@ public class FilesParseUtils {
                 if (file.isDirectory()) {
                     continue;
                 } else {
-                    if (file.getName().endsWith(".class") || file.getName().endsWith(".java")) {
+                    if (file.getName().endsWith(".class")) {
                         String realClass = file.getName().substring(0, file.getName().lastIndexOf("."));
                         scanPackage = aPackage + "." + realClass;
                         Class<?> aClass = Class.forName(scanPackage);
@@ -44,7 +43,7 @@ public class FilesParseUtils {
         for (String filePath : filePaths) {
             root = root.replaceAll("/", "\\\\");
             filePath = filePath.replace(root, "");
-            filePath = filePath.replaceAll("\\\\", ".").substring(1, filePath.length());
+            filePath = filePath.replaceAll("\\\\", ".").substring(0, filePath.length());
             if (filePath.contains(".")) {
                 packages.add(filePath);
             }
