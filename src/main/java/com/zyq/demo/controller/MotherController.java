@@ -7,19 +7,17 @@ import org.zyqSpring.springframework.annotation.ZyqRequestMapping;
 import java.util.HashMap;
 
 /**
- * Created by Enzo Cotter on 2021/5/27.
+ * Created by Enzo Cotter on 2021/6/11.
  */
 @ZyqController
-@ZyqRequestMapping("/hello")
-public class HelloController {
+@ZyqRequestMapping("/mother")
+public class MotherController {
 
-    @ZyqRequestMapping("/hello")
-    public ModelAndView hello() {
+    @ZyqRequestMapping("/mother")
+    public ModelAndView mother() {
         HashMap<String, Object> model = new HashMap<>();
         model.put("data1", "hello");
-        model.put("data2", "world");
+        model.put("data2", "mother");
         return new ModelAndView("test", model);
     }
-
 }
-
