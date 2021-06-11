@@ -1,10 +1,7 @@
 package org.zyqSpring.boot.web;
 
-import lombok.SneakyThrows;
-
 import javax.servlet.ServletContainerInitializer;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import javax.servlet.annotation.HandlesTypes;
 import java.lang.reflect.Modifier;
 import java.util.Iterator;
@@ -23,9 +20,8 @@ public class TomcatServletContainerInitializer implements ServletContainerInitia
      *      * @param sc 当前web在容器的上下文对象
      *      * @throws ServletException
      */
-    @SneakyThrows
     @Override
-    public void onStartup(Set<Class<?>> webAppInitializerClasses, ServletContext servletContext) throws ServletException {
+    public void onStartup(Set<Class<?>> webAppInitializerClasses, ServletContext servletContext) {
 
 
         Iterator var4;

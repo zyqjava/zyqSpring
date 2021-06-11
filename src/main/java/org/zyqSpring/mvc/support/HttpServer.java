@@ -41,7 +41,7 @@ public class HttpServer {
         tomcatServer.getServer().await();
     }
 
-    public void start(String hostName, Integer port) throws LifecycleException {
+    public void start(String hostName, Integer port) {
 
 
        //通过server.xml的格式
@@ -72,11 +72,10 @@ public class HttpServer {
         Host host = new StandardHost();
         host.setName(hostName);
 
-        tomcat.setBaseDir(new File(BASE_DOC).getAbsolutePath());
+        //tomcat.setBaseDir(new File(BASE_DOC).getAbsolutePath());
         // 构建Context
-        Context context = (StandardContext) tomcat.addWebapp(ROOT_PATH, new File(BASE_DOC).getAbsolutePath());
+        StandardContext context = (StandardContext) tomcat.addWebapp(ROOT_PATH, new File(BASE_DOC).getAbsolutePath());
         context.addLifecycleListener(new Tomcat.FixContextListener()); // 生命周期监听器
-
         // 然后按照server.xml，一层层把子节点添加到父节点
         host.addChild(context);
         engine.addChild(host);
@@ -86,12 +85,11 @@ public class HttpServer {
 
         // service在getServer时就被添加到server节点了
 
-        // tomcat是一个servlet,设置路径与映射
+        /*// tomcat是一个servlet,设置路径与映射
         // 定义一个处理器
-        /*tomcat.addServlet(context.getPath(), DISPATCHER, new DispatcherServlet());
+        tomcat.addServlet(context.getPath(), DISPATCHER, new DispatcherServlet());
         //Servlet映射
         context.addServletMappingDecoded(ROOT_PATH, DISPATCHER);*/
-
         try {
             tomcat.start();
             System.out.println("tomcat服务已启动");

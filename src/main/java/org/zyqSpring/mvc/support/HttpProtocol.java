@@ -8,9 +8,9 @@ import java.lang.reflect.InvocationTargetException;
 public class HttpProtocol implements Protocol {
 
     @Override
-    public void start() throws InterruptedException, LifecycleException {
+    public void start() throws LifecycleException {
         HttpServer httpServer = new HttpServer();
-        httpServer.start("127.0.0.1", 8001);
+        httpServer.start("127.0.0.1", 9090);
     }
 
     @Override

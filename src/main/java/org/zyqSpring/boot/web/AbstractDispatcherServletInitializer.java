@@ -2,7 +2,6 @@ package org.zyqSpring.boot.web;
 
 import org.zyqSpring.mvc.servlet.DispatcherServlet;
 import org.zyqSpring.springframework.Listener.ContextLoaderListener;
-import org.zyqSpring.springframework.Listener.SpringListener;
 import org.zyqSpring.springframework.context.support.ZyqAnnotationApplicationContext;
 
 import javax.servlet.ServletContext;
@@ -28,10 +27,12 @@ public abstract class AbstractDispatcherServletInitializer implements WebApplica
             servletContext.setAttribute(ZyqAnnotationApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, rootAppContext);
         }
         //通知容器启动完成
-        SpringListener.publish(rootAppContext, ContextLoaderListener.class);
+        //SpringListener.publish(rootAppContext, ContextLoaderListener.class);
         DispatcherServlet servlet = new DispatcherServlet();
         ServletRegistration.Dynamic app = servletContext.addServlet("app", servlet);
+        app.addMapping("/");
         app.setLoadOnStartup(1);
+
     }
 
     protected abstract ZyqAnnotationApplicationContext createRootApplicationContext(ServletContext servletContext) throws Exception;

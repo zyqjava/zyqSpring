@@ -1,6 +1,5 @@
 package org.zyqSpring.boot;
 
-import org.zyqSpring.boot.web.SpringContextInitializer;
 import org.zyqSpring.mvc.support.Protocol;
 import org.zyqSpring.mvc.support.ProtocolFactory;
 
@@ -9,9 +8,9 @@ import org.zyqSpring.mvc.support.ProtocolFactory;
  */
 public class SpringApplication {
 
-    public static  void run(Class<?> clazz, String[] args) throws Exception {
+    public static void run(Class<?> clazz, String[] args) throws Exception {
 
-        SpringContextInitializer.initApplicationContext(clazz, args);
+        //SpringContextInitializer.initApplicationContext(clazz, args);
 
         //启动Tomcat/netty
         Protocol protocol = ProtocolFactory.getProtocol();

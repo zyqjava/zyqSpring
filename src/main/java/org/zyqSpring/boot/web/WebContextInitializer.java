@@ -12,7 +12,7 @@ public abstract class WebContextInitializer extends AbstractDispatcherServletIni
 
     @Override
     public void onStartup(ServletContext servletContext) throws Exception {
-        createRootApplicationContext(servletContext);
+        super.onStartup(servletContext);
     }
 
     @Override

@@ -336,16 +336,16 @@ public class ZyqAnnotationApplicationContext extends ZyqDefaultListableBeanFacto
                 Class<?> clazz = Class.forName(beanClassName);
                 instance = clazz.newInstance();
                 this.singletonBeanObjectCache.put(beanClassName, instance);
-                //############填充如下代码###############
+                /*//############填充如下代码###############
                 //获取AOP配置
-                AdvisedSupport aopConfig = getAopConfig();
-                aopConfig.setTargetClass(clazz);
-                aopConfig.setTarget(instance);
-                //符合PointCut的规则的话，将创建代理对象
-                if(aopConfig.pointCutMatch()) {
-                    //创建代理
-                    instance = createProxy(aopConfig).getProxy();
-                }
+                    AdvisedSupport aopConfig = getAopConfig();
+                    aopConfig.setTargetClass(clazz);
+                    aopConfig.setTarget(instance);
+                    //符合PointCut的规则的话，将创建代理对象
+                    if(aopConfig.pointCutMatch()) {
+                        //创建代理
+                        instance = createProxy(aopConfig).getProxy();
+                }*/
                 //#############填充完毕##############
             }
         } catch (Exception e) {
