@@ -8,7 +8,6 @@ import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.webresources.DirResourceSet;
 import org.apache.catalina.webresources.StandardRoot;
-import org.zyqSpring.mvc.servlet.DispatcherServlet;
 
 import java.io.File;
 
@@ -18,7 +17,7 @@ public class HttpServer {
 
     private static final String ROOT_PATH = "/";
 
-    private static final String BASE_DOC = "src/main/java";
+    private static final String BASE_DOC = "src/main";
 
 
     public void start() throws LifecycleException {
@@ -89,9 +88,9 @@ public class HttpServer {
 
         // tomcat是一个servlet,设置路径与映射
         // 定义一个处理器
-        tomcat.addServlet(context.getPath(), DISPATCHER, new DispatcherServlet());
+        /*tomcat.addServlet(context.getPath(), DISPATCHER, new DispatcherServlet());
         //Servlet映射
-        context.addServletMappingDecoded(ROOT_PATH, DISPATCHER);
+        context.addServletMappingDecoded(ROOT_PATH, DISPATCHER);*/
 
         try {
             tomcat.start();

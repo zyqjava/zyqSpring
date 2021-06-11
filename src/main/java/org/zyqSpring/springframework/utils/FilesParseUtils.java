@@ -14,6 +14,7 @@ public class FilesParseUtils {
 
     public Class<?> getApplicationClass(String root) throws ClassNotFoundException {
         List<String> filePaths = new ArrayList<>();
+        root = root + "java";
         List<String> packages = getAllPackages(root, filePaths);
         String scanPackage = null;
         for (String aPackage : packages) {
@@ -43,7 +44,7 @@ public class FilesParseUtils {
         for (String filePath : filePaths) {
             root = root.replaceAll("/", "\\\\");
             filePath = filePath.replace(root, "");
-            filePath = filePath.replaceAll("\\\\", ".").substring(0, filePath.length());
+            filePath = filePath.replaceAll("\\\\", ".").substring(1, filePath.length());
             if (filePath.contains(".")) {
                 packages.add(filePath);
             }

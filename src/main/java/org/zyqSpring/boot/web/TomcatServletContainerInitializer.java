@@ -60,10 +60,6 @@ public class TomcatServletContainerInitializer implements ServletContainerInitia
             initializer.onStartup(servletContext);
         }*/
 
-        /*DispatcherServlet servlet = new DispatcherServlet();
-        ServletRegistration.Dynamic app = servletContext.addServlet("app", servlet);
-        app.setLoadOnStartup(1);*/
-
         //存储WebApplicationInitializer实例。在本项目中有两个实例:WebContextInitializer.java和SecurityWebApplicationInitializer.java
         //WebApplicationInitializer.class.newInstance().onStartup(servletContext);
 
